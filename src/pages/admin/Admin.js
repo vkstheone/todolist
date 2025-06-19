@@ -5,13 +5,14 @@ import { Link } from 'react-router-dom';
 import { signOut } from 'firebase/auth';
 import { useNavigate } from 'react-router-dom';
 import { auth, db } from '../../firebaseConnection';
-import { addDoc, collection, onSnapshot, orderBy, query, where } from 'firebase/firestore';
+import { addDoc, collection, deleteDoc, onSnapshot, orderBy, query, where, doc, updateDoc} from 'firebase/firestore';
 
 function Home() {
 
-    const [taskInput, setTaskInput] = useState('')
-    const [user, setUser] = useState({})
-    const [tarefas, setTarefas] = useState([])
+    const [taskInput, setTaskInput] = useState('');
+    const [user, setUser] = useState({});
+    const [tarefas, setTarefas] = useState([]);
+    const [edit, setEdit] = useState({});
     
     useEffect(() =>{
         async function loadTarefa() {
@@ -50,27 +51,61 @@ function Home() {
     async function handleRegister(e) {
         e.preventDefault();
 
-        ;
+        
 
         if(taskInput ===''){
             alert('Digite uma tarefa')
-        }else{
-            await addDoc(collection(db, "tarefas"),{
-                tarefa: taskInput,
-                created: new Date(),
-                userUid: user?.uid
-            })
-            .then(() =>{
-                setTaskInput('')
-                alert("Tarefa cadastrada com sucesso")
-            })
-            .catch((error)=>{
-                console.log(error)
-            })
         }
+        
+        if(edit?.id){
+            handleUpdateTask();
+            return;
+        }
+        
+        
+        await addDoc(collection(db, "tarefas"),{
+            tarefa: taskInput,
+            created: new Date(),
+            userUid: user?.uid
+        })
+        .then(() =>{
+        setTaskInput('')
+        alert("Tarefa cadastrada com sucesso")
+        })
+        .catch((error)=>{
+        console.log(error)
+        })
+        
         
     }
 
+    async function checkTask(id) {
+        const docRef = doc (db,'tarefas', id);
+        
+        await deleteDoc(docRef);
+    };
+
+    async function editTask(item) {
+        setTaskInput(item.tarefa)
+        setEdit(item)
+
+    }
+
+    async function handleUpdateTask() {
+    const docRef = doc (db,'tarefas',edit.id);
+        await updateDoc(docRef, {
+            tarefa:taskInput
+        })
+        .then(() =>{
+            setTaskInput('');
+            setEdit({})
+        })
+        .catch((error=>{
+            console.log(error);
+            setTaskInput('');
+            setEdit({})
+        }))
+    }
 
 
 
@@ -98,8 +133,18 @@ function Home() {
                                         setTaskInput(e.target.value)
                                     }}
                                 />
+
+                                {
+                                    Object.keys(edit).length > 0 ?
+                                    (
+                                        <button className='btn btn-warning' onClick={handleRegister}>Atualizar</button>
+                                    ):
+                                    (
+                                        <button className='btn btn-primary' onClick={handleRegister}>Adicionar</button>
+                                    ) 
+
+                                }
                                 
-                                <button className='btn btn-primary' onClick={handleRegister}>Adicionar</button>
                             </div>
                             <ul className='list-group'>
 
@@ -109,10 +154,10 @@ function Home() {
                                     <li key={item.id} className='list-group-item d-flex justify-content-between align-itemns-center'>
                                         { item.tarefa }
                                         <div>
-                                            <button className='btn btn-warning btn-sm me-2'>
+                                            <button className='btn btn-warning btn-sm me-2' onClick={() =>editTask(item)}>
                                                 <Icon.PencilSquare />
                                             </button>
-                                            <button className='btn btn-success btn-sm me-2'>
+                                            <button className='btn btn-success btn-sm me-2' onClick={() =>{checkTask(item.id)}}>
                                                 <Icon.Check2Square />
                                             </button>
                                         </div>
