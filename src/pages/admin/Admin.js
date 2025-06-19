@@ -20,9 +20,10 @@ function Home() {
             
             if(userDetail){
                 const data = JSON.parse(userDetail);
+                   
 
                 const tarefaRef = collection(db,'tarefas');
-                const q = query(tarefas, orderBy("created", "desc"), where("userUid", "==", data?.uid));
+                const q = query(tarefaRef, orderBy("created", "desc"), where("userUid", "==", data?.uid));
                 const unsub = onSnapshot(q,(snapshot)=>{
                     let lista = [];
                     snapshot.forEach((doc)=>{
@@ -38,7 +39,6 @@ function Home() {
                 console.log("Nehum Usuario encontrado")
             }
             
-            
         }
 
         loadTarefa()
@@ -50,7 +50,7 @@ function Home() {
     async function handleRegister(e) {
         e.preventDefault();
 
-        console.log('User:', user);
+        ;
 
         if(taskInput ===''){
             alert('Digite uma tarefa')
@@ -102,18 +102,28 @@ function Home() {
                                 <button className='btn btn-primary' onClick={handleRegister}>Adicionar</button>
                             </div>
                             <ul className='list-group'>
-                                <li className='list-group-item d-flex justify-content-between align-itemns-center'>
-                                    Estudar js
 
-                                    <div>
-                                        <button className='btn btn-warning btn-sm me-2'>
-                                            <Icon.PencilSquare />
-                                        </button>
-                                        <button className='btn btn-success btn-sm me-2'>
-                                            <Icon.Check2Square />
-                                        </button>
-                                    </div>
-                                </li>
+                             {
+                                tarefas.map((item) =>(
+
+                                    <li key={item.id} className='list-group-item d-flex justify-content-between align-itemns-center'>
+                                        { item.tarefa }
+                                        <div>
+                                            <button className='btn btn-warning btn-sm me-2'>
+                                                <Icon.PencilSquare />
+                                            </button>
+                                            <button className='btn btn-success btn-sm me-2'>
+                                                <Icon.Check2Square />
+                                            </button>
+                                        </div>
+                                    </li>
+
+                                ))
+                             }       
+
+
+
+
                             </ul>
                         </div>
                         <div className='card-footer text-center'>
